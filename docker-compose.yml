@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  jenkins:
+    container_name: jenkins
+    image: jenkins/jenkins:lts
+    # If you want Jenkins to run Docker commands (e.g., building images),
+    # you'll need to run as root (or handle permissions carefully).
+    user: root
+
+    # Map Jenkins UI and agent connections to host ports
+    ports:
+      - "8080:8080"    # Jenkins UI
+      - "50000:50000"  # Jenkins agent port
+
+    # Volumes:
+    # 1) Named volume for persistent Jenkins data
+    # 2) Docker socket (only if Jenkins needs to run Docker commands)
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    # Environment variables—set Docker host if building images inside Jenkins
+    environment:
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+      # Optionally, you can specify other Jenkins-related environment variables here,
+      # such as JAVA_OPTS or CASC_JENKINS_CONFIG if you're using Configuration as Code.
+      # e.g. JAVA_OPTS: "-Xmx1024m"
+
+    # Basic healthcheck that pings the Jenkins login page
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    # Restart policy ensures Jenkins restarts if it goes down
+    restart: unless-stopped
+
+    networks:
+      - jenkins_net
+
+# Named volume for Jenkins stateful data
+volumes:
+  jenkins_home:
+
+# Network for Jenkins (isolates traffic and avoids conflicts)
+networks:
+  jenkins_net:
+    driver: bridge
