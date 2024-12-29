@@ -86,4 +86,4 @@ The Jenkinsfile defines a Declarative Pipeline with stages:
 - Build and watch the magic happen in the Jenkins console logs.
 
 
-# CatPic-Pipeline
+
